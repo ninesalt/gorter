@@ -31,6 +31,12 @@ func getWords(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		url := r.Header.Get("url")
 		mapping := mapURL(url)
+
+		// if URL cannot be mapped, add an error status code
+		if mapping == "" {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
 		w.Write([]byte(mapping))
 	}
 }
