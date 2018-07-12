@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { FormGroup, ControlLabel, FormControl, Button } from 'react-bootstrap'
+import { FormGroup } from 'react-bootstrap'
 import './App.css';
 
 class App extends Component {
