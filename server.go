@@ -29,7 +29,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func getWords(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
-		url := r.Header.Get("url")
+		url := r.URL.Query()["url"][0]
 		mapping := mapURL(url)
 
 		// if URL cannot be mapped, add an error status code
@@ -43,9 +43,8 @@ func getWords(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	directory = make(map[string]string)
-	directoryRev = make(map[string]string)
 	readFile()
+	connectToRedis()
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/map", getWords)

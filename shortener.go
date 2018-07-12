@@ -6,13 +6,22 @@ import (
 	"math/rand"
 	"net/url"
 	"os"
-	"strings"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 var words []string
-var directory map[string]string
-var directoryRev map[string]string
+var redisClient *redis.Client
+
+func connectToRedis() {
+
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     "redis:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+}
 
 func readFile() {
 
@@ -46,27 +55,40 @@ func isValidURL(tocheck string) bool {
 	return err == nil
 }
 
+// get URL given words
 func getMappedURL(randomwords string) string {
-	return directory[strings.ToLower(randomwords)]
+
+	URL, newErr := redisClient.Get(randomwords).Result()
+
+	if newErr == nil {
+		return URL
+	}
+
+	return ""
+
 }
 
 func mapURL(url string) string {
 
 	// if this URL has already been saved before
-	if directoryRev[url] != "" {
-		return directoryRev[url]
+	words, newErr := redisClient.Get(url).Result()
+
+	if newErr == nil {
+		return words
 	}
 
 	if isValidURL(url) {
 
 		randomwords := getRandomWords(3)
+		initial, _ := redisClient.Get(randomwords).Result()
 
-		for directory[randomwords] != "" {
+		for initial != "" {
 			randomwords = getRandomWords(3)
+			initial, _ = redisClient.Get(randomwords).Result()
 		}
 
-		directory[randomwords] = url
-		directoryRev[url] = randomwords
+		redisClient.Set(randomwords, url, 0)
+		redisClient.Set(url, randomwords, 0)
 		return randomwords
 	}
 	fmt.Println("URL is not valid")
